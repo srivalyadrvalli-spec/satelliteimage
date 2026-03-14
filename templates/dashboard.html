@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .navbar {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .navbar h2 {
+            color: #333;
+            font-size: 24px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-links a:hover {
+            background: #f0f0f0;
+            color: #764ba2;
+        }
+        
+        .nav-links a.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card .value {
+            color: #667eea;
+            font-size: 32px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .history-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        .history-card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f8f9fa;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #666;
+        }
+        
+        tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .change-value {
+            color: #667eea;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+        }
+        
+        .timestamp {
+            color: #999;
+            font-size: 13px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-badge.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-badge.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h2>🛰️ Satellite Change Detection</h2>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/visualization">Explore</a>
+            <a href="/report">Submit Report</a>
+            <a href="/reports">View Reports</a>
+            <a href="/landowners">Landowners</a>
+            <a href="/upload">Upload</a>
+            <a href="/analyze">Anomaly</a>
+            <a href="/dashboard" class="active">Dashboard</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Stats Grid -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="loading"><div class="spinner"></div></div>
+        </div>
+        
+        <!-- History Table -->
+        <div class="history-card">
+            <div class="header-actions">
+                <h2>Analysis History</h2>
+                <button class="refresh-btn" onclick="loadData()">🔄 Refresh</button>
+            </div>
+            
+            <div id="historyContainer">
+                <div class="loading"><div class="spinner"></div></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        async function loadData() {
+            await loadStats();
+            await loadHistory();
+        }
+        
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                // also fetch report data for heatmap count
+                const reportResp = await fetch('/api/reports');
+                const reportPoints = await reportResp.json();
+
+                document.getElementById('statsGrid').innerHTML = `
+                    <div class="stat-card">
+                        <h3>Total Analyses</h3>
+                        <div class="value">${stats.total_analyses}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Average Change</h3>
+                        <div class="value">${stats.average_change.toLocaleString()}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Max Change</h3>
+                        <div class="value">${stats.max_change.toLocaleString()}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Min Change</h3>
+                        <div class="value">${stats.min_change.toLocaleString()}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Citizen Reports</h3>
+                        <div class="value">${reportPoints.length}</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        async function loadHistory() {
+            try {
+                const response = await fetch('/api/analysis');
+                const analyses = await response.json();
+                
+                let html = '';
+                
+                if (analyses.length === 0) {
+                    html = `
+                        <div class="empty-state">
+                            <h3>No analyses yet</h3>
+                            <p>Start by uploading satellite images for change detection.</p>
+                            <a href="/" style="color: #667eea; text-decoration: none; margin-top: 20px; display: inline-block;">
+                                Go to Upload →
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    html = `
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Before Image</th>
+                                        <th>After Image</th>
+                                        <th>Change Value</th>
+                                        <th>Alert</th>
+                                        <th>Timestamp</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${analyses.map(a => `
+                                        <tr>
+                                            <td><strong>#${a.id}</strong></td>
+                                            <td>${a.before_filename}</td>
+                                            <td>${a.after_filename}</td>
+                                            <td class="change-value">${a.change_value.toLocaleString()}</td>
+                                            <td class="alert-badge ${a.alert.toLowerCase().replace(' ', '-')}" style="color: ${a.alert.includes('Illegal') || a.alert.includes('Encroachment') || a.alert.includes('Deforestation') ? '#dc2626' : '#059669'};">${a.alert}</td>
+                                            <td class="timestamp">${new Date(a.timestamp).toLocaleString()}</td>
+                                            <td><span class="status-badge ${a.status}">${a.status.toUpperCase()}</span></td>
+                                            <td><button class="btn-delete" onclick="deleteAnalysis(${a.id})">Delete</button></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('historyContainer').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading history:', error);
+                document.getElementById('historyContainer').innerHTML = `
+                    <div class="empty-state">
+                        <h3>Error loading data</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function deleteAnalysis(id) {
+            if (confirm('Are you sure you want to delete this analysis?')) {
+                try {
+                    await fetch(`/api/analysis/${id}`, { method: 'DELETE' });
+                    loadData();
+                } catch (error) {
+                    console.error('Error deleting analysis:', error);
+                }
+            }
+        }
+        
+        // Auto-refresh every 30 seconds
+        loadData();
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html>
